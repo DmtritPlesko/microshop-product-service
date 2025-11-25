@@ -10,7 +10,6 @@ import com.microshop.product.infrastructure.web.response.ProductResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductService {
@@ -20,32 +19,40 @@ public class ProductService {
 
     public ProductResponse createProduct(CreateProductRequest createProductRequest) {
 
-        return mapper.toResponse(mapper.toDomain(createProductRequest));
+        return mapper.toResponseFromDomain(
+                productRepository.save(mapper.toDomain(createProductRequest))
+        );
     }
 
-    public ProductResponse updateProduct(String id, UpdateProductRequest updateProductRequest) {
+    public ProductResponse updateProduct(String id,
+                                         UpdateProductRequest updateProductRequest) {
 
-        Product product = validateById(id);
+        Product product = new Product();
 
         mapper.updateEntity(updateProductRequest, product);
 
-        return mapper.toResponse(product);
+        return mapper.toResponseFromDomain(
+                productRepository.updateProduct(id, product)
+        );
     }
 
-    public ProductResponse patchUpdateProduct(String id, PatchUpdateProductRequest patchUpdateProductRequest) {
+    public ProductResponse patchUpdateProduct(String id,
+                                              PatchUpdateProductRequest patchUpdateProductRequest) {
 
-        Product product = validateById(id);
+        Product product = new Product();
 
         mapper.patchEntity(patchUpdateProductRequest, product);
 
-        return mapper.toResponse(product);
+        return mapper.toResponseFromDomain(
+                productRepository.patchUpdateProduct(id, product)
+        );
     }
 
     public ProductResponse getProductById(String id) {
 
-        Product product = validateById(id);
-
-        return mapper.toResponse(product);
+        return mapper.toResponseFromDomain(
+                productRepository.findById(id)
+        );
     }
 
     public List<ProductResponse> findAllProduct() {
@@ -60,11 +67,4 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    private Product validateById(String id) {
-
-        Optional<Product> product = Optional.ofNullable(productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Продукт с таким айди не существует")));
-
-        return product.get();
-    }
 }
